@@ -20,9 +20,7 @@ pipeline{
         stage ('Print Env Variables') {
             steps {
                 echo 'Printing env variables...'
-                script{
-                    env.getEnvironment().each {k,v -> echo "${k} = ${v}"}
-                }
+                sh 'printenv'
             }
         }
     }
