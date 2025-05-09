@@ -11,6 +11,7 @@ pipeline{
 
     tools{
         jdk 'jdk-21-local'
+        maven 'maven-local'
     }
 
     environment{
@@ -31,6 +32,13 @@ pipeline{
             steps {
                 echo "Build #${env.BUILD_NUMBER} on branch ${env.GIT_BRANCH}"
                 sh 'printenv'
+            }
+        }
+
+        stage ('Verify maven') {
+            steps {
+                sh 'which mvn || echo "Maven not in PATH"'
+                sh 'mvn -v || echo "Maven not executable"'
             }
         }
 
