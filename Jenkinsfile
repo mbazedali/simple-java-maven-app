@@ -87,7 +87,11 @@ pipeline{
             steps {
                 echo "Deploying ${APP_NAME} to local machine at ${DEPLOY_TARGET}"
                 sh "mkdir -p ${DEPLOY_DIR}"
-                sh "cp target/${APP_NAME}.jar ${DEPLOY_TARGET}"
+                script {
+                    def pom = readMavenPom file: 'pom.xml'
+                    def jarFile =  "target/${pom.artifactId}-${pom.version}.jar"
+                    sh "cp ${jarFile} ${DEPLOY_TARGET}"
+                }
             }
         }
 
