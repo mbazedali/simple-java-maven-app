@@ -5,6 +5,7 @@ pipeline{
     parameters{
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Whether to run unit tests')
         choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Deployment environment')
+        booleanParam(name: 'PRINT_ENV', defaultValue: true, description: 'Whether to print the env, to see what\'s under the hood')
     }
 
     agent any
@@ -29,6 +30,7 @@ pipeline{
 
     stages{
         stage ('Print Params') {
+            when { expression { return params.PRINT_ENV } }
             steps {
                 echo "Build #${env.BUILD_NUMBER} on branch ${env.GIT_BRANCH}"
                 sh 'printenv'
@@ -37,23 +39,17 @@ pipeline{
 
         stage ('Verify maven') {
             steps {
-                sh 'which mvn || echo "Maven not in PATH"'
                 sh 'mvn -v || echo "Maven not executable"'
             }
         }
 
         stage ('Build & Test') {
-            parallel {
-                stage ('Compile') {
-                    steps {
+            steps {
+                script {
+                    if ( params.RUN_TESTS ) {
+                        sh 'mvn -B clean verify'
+                    } else {
                         sh 'mvn -B -DskipTests clean package'
-                    }
-                }
-
-                stage ('Unit Tests') {
-                    when { expression { return params.RUN_TESTS } }
-                    steps {
-                        sh 'mvn -B test'
                     }
                 }
             }
@@ -61,10 +57,8 @@ pipeline{
 
         stage ('Integration & Lint') {
             steps {
-                script {
-                    sh 'mvn verify'
-                    sh 'mvn checkstyle:check'
-                }
+                sh 'mvn checkstyle:check'
+                sh 'mvn verify'
             }
         }
 
@@ -99,8 +93,24 @@ pipeline{
             steps {
                 script {
                     def changes = currentBuild.changeSets.collect {cs -> cs.items.collect { it.msg }.join("\n")}.flatten().join("\n")
+                    echo "Changes in this build:\n${changes ?: '— no changes'}"
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished for ${env.BRANCH_NAME}"
+            deleteDir()
+        }
+
+        success {
+            echo "✅ Pipeline SUCCEEDED!"
+        }
+
+        failure {
+            echo "❌ Pipeline FAILED!"
         }
     }
 }
