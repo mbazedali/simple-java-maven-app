@@ -1,4 +1,5 @@
 @Library('my-shared-lib') _
+import pipelineStages
 
 pipeline{
 
@@ -29,74 +30,14 @@ pipeline{
     }
 
     stages{
-        stage ('Print Params') {
-            when { expression { return params.PRINT_ENV } }
-            steps {
-                echo "Build #${env.BUILD_NUMBER} on branch ${env.GIT_BRANCH}"
-                sh 'printenv'
-            }
-        }
+        
+        stage { steps { pipelineStages.verifyMaven() } }
+        stage { steps { pipelineStages.buildAndTest() } }
+        stage { steps { pipelineStages.integrationAndLint() } }
+        stage { steps { pipelineStages.prepareDeployTarget() } }
+        stage { steps { pipelineStages.deploy() } }
+        stage { steps { pipelineStages.changelog() } }
 
-        stage ('Verify maven') {
-            steps {
-                sh 'mvn -v || echo "Maven not executable"'
-            }
-        }
-
-        stage ('Build & Test') {
-            steps {
-                script {
-                    if ( params.RUN_TESTS ) {
-                        sh 'mvn -B clean verify'
-                    } else {
-                        sh 'mvn -B -DskipTests clean package'
-                    }
-                }
-            }
-        }
-
-        stage ('Integration & Lint') {
-            steps {
-                sh 'mvn checkstyle:check'
-                sh 'mvn verify'
-            }
-        }
-
-        stage('Prepare Deploy Target') {
-            steps{
-                script {
-                    env.DEPLOY_TARGET = generateDeploymentName(APP_NAME,GIT_BRANCH,BUILD_NUMBER)
-                    echo "📦 Deployment target: ${env.DEPLOY_TARGET}"
-                }
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                allOf {
-                    branch 'master'
-                    environment name: 'ENV', value: 'prod'
-                }
-            }
-            steps {
-                echo "Deploying ${APP_NAME} to local machine at ${DEPLOY_TARGET}"
-                sh "mkdir -p ${DEPLOY_DIR}"
-                script {
-                    def pom = readMavenPom file: 'pom.xml'
-                    def jarFile =  "target/${pom.artifactId}-${pom.version}.jar"
-                    sh "cp ${jarFile} ${DEPLOY_TARGET}"
-                }
-            }
-        }
-
-        stage('Changelog') {
-            steps {
-                script {
-                    def changes = currentBuild.changeSets.collect {cs -> cs.items.collect { it.msg }.join("\n")}.flatten().join("\n")
-                    echo "Changes in this build:\n${changes ?: '— no changes'}"
-                }
-            }
-        }
     }
 
     post {
