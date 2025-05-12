@@ -30,6 +30,14 @@ pipeline{
 
     stages {
 
+        stage('Print Params') {
+            steps {
+                script {
+                    pipelineStages.printParams()
+                }
+            }
+        }
+
         stage('Verify Maven') {
             steps {
                 script {
