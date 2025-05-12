@@ -29,16 +29,58 @@ pipeline{
         ansiColor('xterm')
     }
 
-    stages{
-        
-        stage { steps { pipelineStages.verifyMaven() } }
-        stage { steps { pipelineStages.buildAndTest() } }
-        stage { steps { pipelineStages.integrationAndLint() } }
-        stage { steps { pipelineStages.prepareDeployTarget() } }
-        stage { steps { pipelineStages.deploy() } }
-        stage { steps { pipelineStages.changelog() } }
+    stages {
 
+        stage('Verify Maven') {
+            steps {
+                script {
+                    pipelineStages.verifyMaven()
+                }
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                script {
+                    pipelineStages.buildAndTest()
+                }
+            }
+        }
+
+        stage('Integration & Lint') {
+            steps {
+                script {
+                    pipelineStages.integrationAndLint()
+                }
+            }
+        }
+
+        stage('Prepare Deploy Target') {
+            steps {
+                script {
+                    pipelineStages.prepareDeployTarget()
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    pipelineStages.deploy()
+                }
+            }
+        }
+
+        stage('Changelog') {
+            steps {
+                script {
+                    pipelineStages.changelog()
+                }
+            }
+        }
+        
     }
+
 
     post {
         always {
