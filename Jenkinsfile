@@ -34,6 +34,11 @@ pipeline{
             steps {
                 script {
                     pipelineStages.printParams()
+                    def lastSuccessful = currentBuild.previousSuccessfulBuild
+                    if (lastSuccessful == null) {
+                        echo "No previous successful build found."
+                    } else {
+                        echo "Last successful build: ${lastSuccessful.displayName} (Number: ${lastSuccessful.number})"
                 }
             }
         }
