@@ -39,6 +39,7 @@ pipeline{
                         echo "No previous successful build found."
                     } else {
                         echo "Last successful build: ${lastSuccessful.displayName} (Number: ${lastSuccessful.number})"
+                    }
                 }
             }
         }
