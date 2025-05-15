@@ -35,10 +35,15 @@ pipeline{
                 script {
                     pipelineStages.printParams()
                     def lastSuccessful = currentBuild.previousSuccessfulBuild
+                    def buildData = lastSuccessful.getAction(hudson.plugins.git.util.BuildData)
+                    def lsbSha = buildData.lastBuiltRevision.SHA1.toString()
+                    def headSha = env.GIT_COMMIT
                     if (lastSuccessful == null) {
                         echo "No previous successful build found."
                     } else {
                         echo "Last successful build: ${lastSuccessful.displayName} (Number: ${lastSuccessful.number})"
+                        echo "Last successful build commit hash: ${lsbSha}"
+                        echo "Current build commit hash (HEAD): ${headSha}"
                     }
                 }
             }
