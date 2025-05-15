@@ -36,7 +36,7 @@ pipeline{
                     pipelineStages.printParams()
                     def lastSuccessful = currentBuild.previousSuccessfulBuild
                     def buildData = lastSuccessful.rawBuild.getAction(hudson.plugins.git.util.BuildData)
-                    def lsbSha = buildData.lastBuiltRevision.SHA1.toString()
+                    def lsbSha = build.getAction(hudson.plugins.git.util.BuildData).lastBuild.revision.getSha1String()
                     def headSha = env.GIT_COMMIT
                     if (lastSuccessful == null) {
                         echo "No previous successful build found."
